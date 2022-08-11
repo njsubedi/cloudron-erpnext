@@ -12,8 +12,8 @@
   "changelog": "file://manifest/CHANGELOG.md",
   "postInstallMessage": "file://manifest/POSTINSTALL.md",
   "healthCheckPath": "/",
-  "httpPort": 8080,
-  "memoryLimit": 1073741824,
+  "httpPort": 80,
+  "memoryLimit": 4294967296,
   "addons": {
     "localstorage": {},
     "sendmail": {},

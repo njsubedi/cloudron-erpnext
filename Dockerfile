@@ -75,15 +75,17 @@ RUN bench get-app payments \
 # RUN jq '.db_host = "127.0.0.1"' /app/code/frappe-bench/sites/common_site_config.json > /tmp/jqtmp \
 #    && mv /tmp/jqtmp /app/code/frappe-bench/sites/common_site_config.json
 
-# This will prepare configuration for supervisor and nginx
-RUN bench setup supervisor && bench setup nginx
+# This will prepare configuration for redis, nginx and supervisor
+RUN bench setup redis && bench setup nginx && bench setup supervisor
 
 # Need root access for installing mysql; there could be other ways but it works
 USER root
 
 # Basically move config to proper location (see below for details[1])
-RUN sudo ln -s /app/data/frappe/config/supervisor.conf /etc/supervisor/conf.d/frappe-bench.conf && \
-    sudo ln -s /app/data/frappe/config//nginx.conf /etc/nginx/conf.d/frappe-bench.conf \
+RUN mkdir -p /run/supervisor && \
+    sudo ln -s /app/data/frappe/config/supervisor.conf /etc/supervisor/conf.d/frappe-bench.conf && \
+    sudo ln -s /app/data/frappe/config/nginx.conf /etc/nginx/conf.d/frappe-bench.conf && \
+    sudo ln -sf /run/supervisor/supervisord.log /var/log/supervisor/supervisord.log
 
 # Add our custom mysql/mariadb configuration
 ADD mysql_custom.cnf /etc/mysql/conf.d/
@@ -107,15 +109,29 @@ RUN sudo sudo mysqld_safe & \
 # and put a symlink to /app/data from the original location; on first run, we copy
 # files from <dir>-orig to /app/data/<dir>, which in turn points to the actual files.
 # anyone who has packaged an app would know this practice.
-RUN mkdir -p /app/data/mysql \
-    && mkdir -p /run/logs/mysql \
+RUN mkdir -p /app/data/mariadb \
+    && mkdir -p /run/mysqld/logs \
     && mv /var/lib/mysql /var/lib/mysql-orig \
     && mv /var/log/mysql /var/log/mysql-orig \
-    && ln -sf /app/data/mysql /var/lib/mysql \
-    && ln -sf /run/logs/mysql /var/log/mysql
+    && ln -sf /app/data/mariadb /var/lib/mysql \
+    && ln -sf /run/mysqld/logs /var/log/mysql
+
+RUN mkdir -p /app/data/redis /run/redis/logs \
+    && mv /etc/redis /etc/redis-orig \
+    && ln -sf /app/data/redis /etc/redis
+
+RUN mkdir -p /run/nginx/logs /app/data/nginx \
+    && rm -r /var/log/nginx \
+    && ln -sf /run/nginx/logs /var/log/nginx \
+    && rm -r /var/lib/nginx \
+    && ln -sf /app/data/nginx /var/lib/nginx
+
 
 # Same thing, but for the folders that frappe would pollute with writes
 RUN mkdir -p /app/data/frappe \
+    && rm -rf /app/code/frappe-bench/apps/erpnext/.git \
+    && rm -rf /app/code/frappe-bench/apps/payments/.git \
+    && rm -rf /app/code/frappe-bench/apps/frappe/.git \
     && mv /app/code/frappe-bench/sites /app/code/frappe-bench/sites-orig \
     && mv /app/code/frappe-bench/config /app/code/frappe-bench/config-orig \
     && mv /app/code/frappe-bench/apps /app/code/frappe-bench/apps-orig \
