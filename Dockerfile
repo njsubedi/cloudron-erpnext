@@ -14,8 +14,6 @@ RUN mkdir -p /app/code /app/data/{frappe-bench,db} /run/{logs} \
     && add-apt-repository ppa:deadsnakes/ppa \
     && apt-get -y update \
     && apt-get install -y --reinstall --fix-missing \
-    mariadb-client-10.3 \
-    mariadb-server-10.3 \
     wkhtmltopdf \
     xvfb \
     libfontconfig\
@@ -32,6 +30,11 @@ RUN mkdir -p /app/code /app/data/{frappe-bench,db} /run/{logs} \
     fonts-cantarell\
     xfonts-75dpi\
     xfonts-base
+
+RUN wget -O /tmp/mariadb_repo_setup https://downloads.mariadb.com/MariaDB/mariadb_repo_setup && \
+    chmod +x /tmp/mariadb_repo_setup && \
+    sudo /tmp/mariadb_repo_setup --mariadb-server-version="mariadb-10.6" && \
+    sudo apt install -y mariadb-server mariadb-backup
 
 # If we don't install python 3.10, some python functions won't work.
 # remove this block to see them.
@@ -62,21 +65,19 @@ RUN chown -R cloudron:cloudron /app/code/ \
     && echo "export BENCH_DEVELOPER=0" >>/home/cloudron/.bashrc
 
 # Initialize frappe-bench, whatever it means.
-RUN bench init --verbose --ignore-exist --python /usr/bin/python3 /app/code/frappe-bench
+RUN bench init --verbose --frappe-branch version-14 --ignore-exist --python /usr/bin/python3 /app/code/frappe-bench
 
 # If we run any command outside this directory, it simple FAILS.
 WORKDIR /app/code/frappe-bench
 
-# I've already tried pip3 install apps/frappe. It's the same thing; at least we can install specific version
-RUN bench get-app payments \
-    && bench get-app erpnext
+# We have to specify the specific version of erpnext. The payments and hrms don't have tagged versions.
+RUN bench get-app --branch develop payments \
+    && bench get-app --branch develop hrms \
+    && bench get-app --branch version-14 erpnext
 
 # Required if we later switched to external database; for now we're settling with local mysqld.sock
 # RUN jq '.db_host = "127.0.0.1"' /app/code/frappe-bench/sites/common_site_config.json > /tmp/jqtmp \
 #    && mv /tmp/jqtmp /app/code/frappe-bench/sites/common_site_config.json
-
-# This will prepare configuration for redis, nginx and supervisor
-RUN bench setup redis && bench setup nginx && bench setup supervisor
 
 # Need root access for installing mysql; there could be other ways but it works
 USER root
@@ -99,10 +100,8 @@ RUN sudo sudo mysqld_safe & \
     && mysql -uroot -v -e "DELETE FROM mysql.user WHERE user='root' AND host NOT IN ('localhost', '127.0.0.1', '::1')" \
     && mysql -uroot -v -e "DROP DATABASE IF EXISTS test" \
     && mysql -uroot -v -e "DELETE FROM mysql.db WHERE db='test' OR db='test\\_%'" \
-    && mysql -uroot -v -e "UPDATE mysql.user SET password=PASSWORD('root') WHERE user='root'" \
-    && mysql -uroot -proot -v -e "FLUSH PRIVILEGES;" \
-    && mysql -uroot -proot -v -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD(\"root\");" \
-    && mysql -uroot -proot -v -e "FLUSH PRIVILEGES;" \
+    && mysql -uroot -v -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('root');" \
+    && mysql -uroot -v -e "FLUSH PRIVILEGES;" \
     && mysqladmin -uroot -proot shutdown
 
 # [1]This is a standard procedure for Cloudron to move existing "data" somewhere else, \
@@ -111,6 +110,7 @@ RUN sudo sudo mysqld_safe & \
 # anyone who has packaged an app would know this practice.
 RUN mkdir -p /app/data/mariadb \
     && mkdir -p /run/mysqld/logs \
+    && ls -la /var/log \
     && mv /var/lib/mysql /var/lib/mysql-orig \
     && mv /var/log/mysql /var/log/mysql-orig \
     && ln -sf /app/data/mariadb /var/lib/mysql \

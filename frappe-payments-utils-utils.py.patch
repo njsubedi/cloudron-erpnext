@@ -1,0 +1,143 @@
+Index: payments/utils/utils.py
+<+>UTF-8
+===================================================================
+diff --git a/payments/utils/utils.py b/payments/utils/utils.py
+--- a/payments/utils/utils.py
++++ b/payments/utils/utils.py	(date 1660235319741)
+@@ -65,71 +65,71 @@
+ 						"label": "Payments",
+ 						"insert_after": "custom_css",
+ 					},
+-					{
+-						"default": "0",
+-						"fieldname": "accept_payment",
+-						"fieldtype": "Check",
+-						"label": "Accept Payment",
+-						"insert_after": "payments",
+-					},
+-					{
+-						"depends_on": "accept_payment",
+-						"fieldname": "payment_gateway",
+-						"fieldtype": "Link",
+-						"label": "Payment Gateway",
+-						"options": "Payment Gateway",
+-						"insert_after": "accept_payment",
+-					},
+-					{
+-						"default": "Buy Now",
+-						"depends_on": "accept_payment",
+-						"fieldname": "payment_button_label",
+-						"fieldtype": "Data",
+-						"label": "Button Label",
+-						"insert_after": "payment_gateway",
+-					},
+-					{
+-						"depends_on": "accept_payment",
+-						"fieldname": "payment_button_help",
+-						"fieldtype": "Text",
+-						"label": "Button Help",
+-						"insert_after": "payment_button_label",
+-					},
+-					{
+-						"fieldname": "payments_cb",
+-						"fieldtype": "Column Break",
+-						"insert_after": "payment_button_help",
+-					},
+-					{
+-						"default": "0",
+-						"depends_on": "accept_payment",
+-						"fieldname": "amount_based_on_field",
+-						"fieldtype": "Check",
+-						"label": "Amount Based On Field",
+-						"insert_after": "payments_cb",
+-					},
+-					{
+-						"depends_on": "eval:doc.accept_payment && doc.amount_based_on_field",
+-						"fieldname": "amount_field",
+-						"fieldtype": "Select",
+-						"label": "Amount Field",
+-						"insert_after": "amount_based_on_field",
+-					},
+-					{
+-						"depends_on": "eval:doc.accept_payment && !doc.amount_based_on_field",
+-						"fieldname": "amount",
+-						"fieldtype": "Currency",
+-						"label": "Amount",
+-						"insert_after": "amount_field",
+-					},
+-					{
+-						"depends_on": "accept_payment",
+-						"fieldname": "currency",
+-						"fieldtype": "Link",
+-						"label": "Currency",
+-						"options": "Currency",
+-						"insert_after": "amount",
+-					},
++					# {
++					# 	"default": "0",
++					# 	"fieldname": "accept_payment",
++					# 	"fieldtype": "Check",
++					# 	"label": "Accept Payment",
++					# 	"insert_after": "payments",
++					# },
++					# {
++					# 	"depends_on": "accept_payment",
++					# 	"fieldname": "payment_gateway",
++					# 	"fieldtype": "Link",
++					# 	"label": "Payment Gateway",
++					# 	"options": "Payment Gateway",
++					# 	"insert_after": "accept_payment",
++					# },
++					# {
++					# 	"default": "Buy Now",
++					# 	"depends_on": "accept_payment",
++					# 	"fieldname": "payment_button_label",
++					# 	"fieldtype": "Data",
++					# 	"label": "Button Label",
++					# 	"insert_after": "payment_gateway",
++					# },
++					# {
++					# 	"depends_on": "accept_payment",
++					# 	"fieldname": "payment_button_help",
++					# 	"fieldtype": "Text",
++					# 	"label": "Button Help",
++					# 	"insert_after": "payment_button_label",
++					# },
++					# {
++					# 	"fieldname": "payments_cb",
++					# 	"fieldtype": "Column Break",
++					# 	"insert_after": "payment_button_help",
++					# },
++					# {
++					# 	"default": "0",
++					# 	"depends_on": "accept_payment",
++					# 	"fieldname": "amount_based_on_field",
++					# 	"fieldtype": "Check",
++					# 	"label": "Amount Based On Field",
++					# 	"insert_after": "payments_cb",
++					# },
++					# {
++					# 	"depends_on": "eval:doc.accept_payment && doc.amount_based_on_field",
++					# 	"fieldname": "amount_field",
++					# 	"fieldtype": "Select",
++					# 	"label": "Amount Field",
++					# 	"insert_after": "amount_based_on_field",
++					# },
++					# {
++					# 	"depends_on": "eval:doc.accept_payment && !doc.amount_based_on_field",
++					# 	"fieldname": "amount",
++					# 	"fieldtype": "Currency",
++					# 	"label": "Amount",
++					# 	"insert_after": "amount_field",
++					# },
++					# {
++					# 	"depends_on": "accept_payment",
++					# 	"fieldname": "currency",
++					# 	"fieldtype": "Link",
++					# 	"label": "Currency",
++					# 	"options": "Currency",
++					# 	"insert_after": "amount",
++					# },
+ 				]
+ 			}
+ 		)

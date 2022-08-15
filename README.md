@@ -20,6 +20,10 @@ erpnext can federate users from Cloudron user directory and acts as a OpenID / S
 
 Refer to the [Cloudron Docs](https://docs.cloudron.io/packaging/cli) for more information.
 
+## About dev-scripts
+Please refer to `docker-run.sh` file for some commands handy for you to test this setup.
+
+
 ## Updating ErpNext
 [Official Documentation](https://frappeframework.com/docs/v14/user/en/production-setup#updating)
 ```shell

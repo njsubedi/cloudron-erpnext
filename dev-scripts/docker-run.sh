@@ -22,23 +22,11 @@ BUILDKIT_PROGRESS=plain docker build --platform linux/amd64 -t erpnext_custom . 
     -e CLOUDRON_MYSQL_DATABASE=erpnext_site1 \
     erpnext_custom
 
-BUILDKIT_PROGRESS=plain docker build --platform linux/arm64 -t erpnext_custom . &&
+BUILDKIT_PROGRESS=plain docker build --platform linux/arm64 -t erpnext14 . &&
   docker run --platform linux/arm64 --read-only \
-    -v "$(pwd)"/.docker/app/data:/app/data:rw \
-    -v "$(pwd)"/.docker/tmp:/tmp:rw \
-    -v "$(pwd)"/.docker/run:/run:rw \
-    -p 8000:8000 \
+    -v "$(pwd)"/.docker14/app/data:/app/data:rw \
+    -v "$(pwd)"/.docker14/tmp:/tmp:rw \
+    -v "$(pwd)"/.docker14/run:/run:rw \
+    -p 8000:80 \
     -p 9000:9000 \
-    erpnext_custom
-
-docker run --platform linux/arm64 --read-only \
-  -v "$(pwd)"/.docker/app/data:/app/data:rw \
-  -v "$(pwd)"/.docker/tmp:/tmp:rw \
-  -v "$(pwd)"/.docker/run:/run:rw \
-  -p 8000:80 \
-  -p 9000:9000 \
-  frappe_installed
-
-mysqladmin -uroot -proot shutdown
-
-mysqld_safe --skip-syslog --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    erpnext14
