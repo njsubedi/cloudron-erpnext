@@ -115,7 +115,7 @@ echo ">>>>  done /run/supervisor"
 ############# </supervisor> ##################
 
 ############# <default-site> ##################
-DEFAULT_SITE=${CLOUDRON_APP_ORIGIN:-'cloudron.local'}
+DEFAULT_SITE=${CLOUDRON_APP_DOMAIN:-'cloudron.local'}
 if [[ ! -f "/app/data/frappe/sites/${DEFAULT_SITE}/.initialized" ]]; then
   echo ">>>>  Creating default site with hostname: ${DEFAULT_SITE}"
 
