@@ -16,13 +16,6 @@ if [[ ! -f /app/data/frappe/.initialized ]]; then
   cp -R /app/code/frappe-bench/apps-orig/* /app/data/frappe/apps/
   cp -R /app/code/frappe-bench/logs-orig/* /app/data/frappe/logs/
 
-  ### IMPORTANT ###
-  # The payments module causes crash, so I'm simply patching the utils.py file to remove the
-  # Doctypes that cause the crash. This might show unwanted behaviours on the payments module.
-  cd /app/data/frappe/apps/payments &&
-    git apply frappe-payments-utils-utils.py.patch &&
-    cd /app/code/frappe-bench
-
   chown -R cloudron:cloudron /app/data/frappe
 
   touch /app/data/frappe/.initialized
@@ -77,7 +70,7 @@ echo ">>>>  Running mysqld_safe..."
 mkdir -p /app/data/tmp && chown mysql:mysql /app/data/tmp
 
 # NOTE: --character-set-server and --collation-server options don't work in config file. *SIGH*
-mysqld_safe \
+/usr/local/bin/gosu mysql:mysql mysqld_safe \
   --skip-syslog \
   --character-set-server=utf8mb4 \
   --collation-server=utf8mb4_unicode_ci &
@@ -93,24 +86,20 @@ echo ">>>>  Success. Daemon mysqld listening."
 
 ############# <nginx> ##################
 echo ">>>>  Setup directories for nginx"
-if [[ ! -d /app/data/nginx ]]; then
-  mkdir -p /app/data/nginx
-fi
-chown -R cloudron:cloudron /app/data/nginx
-
 if [[ ! -d /run/nginx/logs ]]; then
   mkdir -p /run/nginx/logs
 fi
-chown -R cloudron:cloudron /run/nginx/logs
+chown -R cloudron:cloudron /run/nginx
 echo ">>>>  Done nginx dir setup"
 ############# </nginx> ##################
 
 ############# <supervisor> ##################
-echo ">>>>  setup /run/supervisor"
-if [[ ! -d /run/supervisor ]]; then
-  mkdir -p /run/supervisor
+echo ">>>>  setup /run/supervisor/logs"
+if [[ ! -d /run/supervisor/logs ]]; then
+  mkdir -p /run/supervisor/logs
 fi
-echo ">>>>  done /run/supervisor"
+chown -R cloudron:cloudron /run/supervisor
+echo ">>>>  done /run/supervisor/logs"
 ############# </supervisor> ##################
 
 ############# <default-site> ##################
@@ -121,7 +110,11 @@ if [[ ! -f "/app/data/frappe/sites/${DEFAULT_SITE}/.initialized" ]]; then
   echo 'frappe
         erpnext
         payments
-        hrms' > /app/data/frappe/sites/apps.txt
+        hrms' >/app/data/frappe/sites/apps.txt
+
+  cd /app/code/frappe-bench
+
+  SITE_PWD=$(openssl rand -hex 32)
 
   /usr/local/bin/gosu cloudron:cloudron bench new-site \
     --verbose \
@@ -130,7 +123,9 @@ if [[ ! -f "/app/data/frappe/sites/${DEFAULT_SITE}/.initialized" ]]; then
     --db-password "cloudron" \
     --db-root-username "root" \
     --db-root-password "root" \
-    --admin-password "changeme" "${DEFAULT_SITE}"
+    --admin-password "${SITE_PWD}" "${DEFAULT_SITE}"
+
+  echo "Username: Administrator / Password: $SITE_PWD" >"/app/data/${DEFAULT_SITE}-credential.txt"
 
   /usr/local/bin/gosu cloudron:cloudron bench use "${DEFAULT_SITE}"
 
@@ -145,24 +140,47 @@ if [[ ! -f "/app/data/frappe/sites/${DEFAULT_SITE}/.initialized" ]]; then
   /usr/local/bin/gosu cloudron:cloudron bench install-app erpnext
   echo ">>>>  done"
 
-
-
-  echo ">>>> ** The HRMS module causes the database tables to crash. **"
-  echo ">>>> ** Please report the issue or try to fix if it fails. **"
-  echo ">>>>  installing hrms..."
-  sleep 10
-
-  /usr/local/bin/gosu cloudron:cloudron bench install-app hrms
-  echo ">>>>  done"
-
   touch "/app/data/frappe/sites/${DEFAULT_SITE}/.initialized"
 else
   echo ">>>>  Site ${DEFAULT_SITE} already setup."
 fi
 
 ############# </default-site> ##################
+echo ">>>>  Setting up nginx, redis and supervisor..."
+# "--logging none" only works "--logging combined" didn't work.
+# Without this flag, "main" will be added to access_log, Causing nginx fail to start.
+# --yes bypasses prompt
+/usr/local/bin/gosu cloudron:cloudron bench setup nginx --yes --logging none
+# fix "Conflicting scheme in header" error.
+sed -i 's|proxy_set_header X-Forwarded-Proto $scheme;|proxy_set_header X-Forwarded-Proto https; # patched for cloudron|g' /app/data/frappe/config/nginx.conf
 
-/usr/local/bin/gosu cloudron:cloudron bench setup nginx --yes --logging combined
+/usr/local/bin/gosu cloudron:cloudron bench setup redis
+
 /usr/local/bin/gosu cloudron:cloudron bench setup supervisor --yes
+echo ">>>>  Done"
+
+if [[ ! -f "/app/data/frappe/sites/${DEFAULT_SITE}/.hrms_installed" ]]; then
+
+  echo ">>>>  Installing HRMS app (in background) to hostname: ${DEFAULT_SITE}"
+
+  # Install HRMS app; requires Redis to be running, so we do "bench install-app hrms &" to run it as a background job.
+  # Right after this, supervisor process will start all the required processes (redis, etc) that this command needs.
+
+  /usr/local/bin/gosu cloudron:cloudron bench install-app hrms &
+  echo ">>>>  done"
+
+  touch "/app/data/frappe/sites/${DEFAULT_SITE}/.hrms_installed"
+
+else
+  echo ">>>>  HRMS already setup in ${DEFAULT_SITE}"
+fi
+
+echo ">>>>  All done. Starting nginx & supervisord..."
+
+echo '[program:nginx]
+command=/usr/sbin/nginx -c /etc/nginx/nginx.conf -g "daemon off;"
+autostart=true
+autorestart=true
+priority=10' >/app/data/frappe/config/supervisor-app-nginx.conf
 
 /usr/local/bin/gosu cloudron:cloudron /usr/bin/supervisord --configuration /etc/supervisor/supervisord.conf --nodaemon

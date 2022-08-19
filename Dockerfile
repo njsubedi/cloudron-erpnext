@@ -82,11 +82,14 @@ RUN bench get-app --branch develop payments \
 # Need root access for installing mysql; there could be other ways but it works
 USER root
 
+COPY supervisord.conf /etc/supervisor/supervisord.conf
+
 # Basically move config to proper location (see below for details[1])
-RUN mkdir -p /run/supervisor && \
-    sudo ln -s /app/data/frappe/config/supervisor.conf /etc/supervisor/conf.d/frappe-bench.conf && \
-    sudo ln -s /app/data/frappe/config/nginx.conf /etc/nginx/conf.d/frappe-bench.conf && \
-    sudo ln -sf /run/supervisor/supervisord.log /var/log/supervisor/supervisord.log
+RUN mkdir -p /run/supervisor/{logs} \
+    && sudo ln -s /run/supervisor/logs/supervisord.log /var/log/supervisor/supervisord.log \
+    && sudo ln -s /app/data/frappe/config/supervisor.conf /etc/supervisor/conf.d/frappe-bench.conf \
+    && sudo ln -s /app/data/frappe/config/supervisor-app-nginx.conf /etc/supervisor/conf.d/app-nginx.conf \
+    && sudo ln -s /app/data/frappe/config/nginx.conf /etc/nginx/sites-enabled/cloudron-erpnext.conf
 
 # Add our custom mysql/mariadb configuration
 ADD mysql_custom.cnf /etc/mysql/conf.d/
@@ -120,12 +123,11 @@ RUN mkdir -p /app/data/redis /run/redis/logs \
     && mv /etc/redis /etc/redis-orig \
     && ln -sf /app/data/redis /etc/redis
 
-RUN mkdir -p /run/nginx/logs /app/data/nginx \
-    && rm -r /var/log/nginx \
-    && ln -sf /run/nginx/logs /var/log/nginx \
-    && rm -r /var/lib/nginx \
-    && ln -sf /app/data/nginx /var/lib/nginx
-
+RUN mkdir -p /run/nginx/ \
+    && rm -r /var/lib/nginx && ln -sf /run/nginx /var/lib/nginx \
+    && rm -r /var/log/nginx && ln -sf /run/nginx/logs /var/log/nginx \
+    && rm -f /etc/nginx/sites-available/default && rm -f /etc/nginx/sites-enabled/default \
+    && sed -i 's|pid /run/nginx.pid;|pid /run/nginx/nginx.pid;|g' /etc/nginx/nginx.conf
 
 # Same thing, but for the folders that frappe would pollute with writes
 RUN mkdir -p /app/data/frappe \

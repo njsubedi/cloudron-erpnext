@@ -1,12 +1,5 @@
-Run erpnext on Cloudron. The default *master* realm is set up to use Cloudron LDAP for user federation.
+Run [Erpnext](https://erpnext.com) on [Cloudron](https://cloudron.io).
 
-Features
----
-- Configured to use Cloudron LDAP for user federation
-- Configured to use Cloudron SMTP for email
+For now, it just works, if nothing goes wrong during installation.
 
-Optimizations
---
-- Uses recommended LDAP search filter to log in with email/username
-- Sets the recommended custom JVM options to fix java memory issues
-- Properly maps the givenName property with firstName to work with Cloudron LDAP
+

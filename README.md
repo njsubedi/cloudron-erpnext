@@ -4,7 +4,7 @@ Run [erpnext](https://www.erpnext.com/) on [Cloudron](https://cloudron.io)
 
 ## Why
 
-erpnext can federate users from Cloudron user directory and acts as a OpenID / SAML Provider.
+Because, why not?
 
 ## Build and Install
 
@@ -15,17 +15,19 @@ erpnext can federate users from Cloudron user directory and acts as a OpenID / S
 - If you're using your own docker registry, name the image properly,
   like `docker.example-cloudron.tld/john_doe/cloudron-erpnext`.
 - Log in to Docker Hub and mark the image as public, if necessary.
-- Install the app `cloudron install -l <auth.yourdomain.tld>`
+- Install the app `cloudron install -l <erp.yourdomain.tld>`
 - Look at the logs to see if everything is going as planned.
 
 Refer to the [Cloudron Docs](https://docs.cloudron.io/packaging/cli) for more information.
 
 ## About dev-scripts
+
 Please refer to `docker-run.sh` file for some commands handy for you to test this setup.
 
-
 ## Updating ErpNext
+
 [Official Documentation](https://frappeframework.com/docs/v14/user/en/production-setup#updating)
+
 ```shell
   # update everything
   bench update
