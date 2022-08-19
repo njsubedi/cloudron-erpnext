@@ -10,12 +10,11 @@ set -eu pipefail
 # copy frappe and erpnext, then chown to cloudron (takes a while)
 if [[ ! -f /app/data/frappe/.initialized ]]; then
   echo ">>>>  firstrun:  setup /app/data/{config,sites,apps,logs}"
-  mkdir -p /app/data/frappe/{config,sites,apps,logs,site-packages}
+  mkdir -p /app/data/frappe/{config,sites,apps,logs}
   cp -R /app/code/frappe-bench/config-orig/* /app/data/frappe/config/
   cp -R /app/code/frappe-bench/sites-orig/* /app/data/frappe/sites/
   cp -R /app/code/frappe-bench/apps-orig/* /app/data/frappe/apps/
   cp -R /app/code/frappe-bench/logs-orig/* /app/data/frappe/logs/
-  cp -R /app/code/frappe-bench/env/lib/python3.10/site-packages-orig/* /app/data/frappe/site-packages/
 
   ### IMPORTANT ###
   # The payments module causes crash, so I'm simply patching the utils.py file to remove the
