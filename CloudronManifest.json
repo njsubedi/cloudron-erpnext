@@ -16,8 +16,12 @@
   "memoryLimit": 4294967296,
   "addons": {
     "localstorage": {},
+    "recvmail": {},
     "sendmail": {},
-    "ldap": {}
+    "ldap": {},
+    "redis": {
+      "noPassword": true
+    }
   },
   "tags": [
     "erp",

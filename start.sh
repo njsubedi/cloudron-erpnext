@@ -82,6 +82,15 @@ tail -f /app/data/mariadb/*.err | sed '/ready for connections/ q'
 
 echo ">>>>  Success. Daemon mysqld listening."
 
+if [[ ! -f /app/data/mariadb/.root_password ]]; then
+  echo ">>>> Changing password for database root user..."
+  DB_ROOT_PWD=$(openssl rand -hex 32)
+  echo -n "$DB_ROOT_PWD" >>/app/data/mariadb/.root_password
+
+  mysql -uroot -proot -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('${DB_ROOT_PWD}');"
+  mysql -uroot -proot -e "FLUSH PRIVILEGES;"
+  echo "Done."
+fi
 ############# </mariadb> ##################
 
 ############# <nginx> ##################
@@ -104,28 +113,38 @@ echo ">>>>  done /run/supervisor/logs"
 
 ############# <default-site> ##################
 DEFAULT_SITE=${CLOUDRON_APP_DOMAIN:-'cloudron.local'}
+
 if [[ ! -f "/app/data/frappe/sites/${DEFAULT_SITE}/.initialized" ]]; then
-  echo ">>>>  Creating default site with hostname: ${DEFAULT_SITE}"
+
+  echo ">>>>  Creating default site with hostname: ${DEFAULT_SITE} ..."
 
   echo 'frappe
-        erpnext
-        payments
-        hrms' >/app/data/frappe/sites/apps.txt
+erpnext
+payments
+hrms' >/app/data/frappe/sites/apps.txt
 
   cd /app/code/frappe-bench
 
+  echo ">>>> Generating passwords..."
+  DB_ROOT_PWD=$(</app/data/mariadb/.root_password)
+  DB_NAME=$(echo "${DEFAULT_SITE}" | tr '.' '_')
+  DB_PWD=$(openssl rand -hex 32)
   SITE_PWD=$(openssl rand -hex 32)
+
+  echo ">>>> Running bench new-site..."
 
   /usr/local/bin/gosu cloudron:cloudron bench new-site \
     --verbose \
     --force \
-    --db-name "cloudron" \
-    --db-password "cloudron" \
+    --db-name "${DB_NAME}" \
+    --db-password "${DB_PWD}" \
     --db-root-username "root" \
-    --db-root-password "root" \
+    --db-root-password "${DB_ROOT_PWD}" \
     --admin-password "${SITE_PWD}" "${DEFAULT_SITE}"
 
-  echo "Username: Administrator / Password: $SITE_PWD" >"/app/data/${DEFAULT_SITE}-credential.txt"
+  echo "Website Username: Administrator / Website Password: ${SITE_PWD}" >"/app/data/${DEFAULT_SITE}-credential.txt"
+
+  echo "Database Username: ${DB_NAME} / Database Password: ${DB_PWD}" >>"/app/data/${DEFAULT_SITE}-credential.txt"
 
   /usr/local/bin/gosu cloudron:cloudron bench use "${DEFAULT_SITE}"
 
