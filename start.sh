@@ -176,6 +176,7 @@ else
 fi
 
 echo ">>>>  All done. Starting nginx & supervisord..."
+echo ">>>> To setup LDAP, open the web terminal and run /app/code/setup-ldap.sh"
 
 echo '[program:nginx]
 command=/usr/sbin/nginx -c /etc/nginx/nginx.conf -g "daemon off;"

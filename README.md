@@ -24,9 +24,20 @@ Refer to the [Cloudron Docs](https://docs.cloudron.io/packaging/cli) for more in
 
 Please refer to `docker-run.sh` file for some commands handy for you to test this setup.
 
+## LDAP Connection [WIP]
+
+LDAP Auth is already configured. When a user logs in for the first time, a new **System User** is created with **Guest**
+role. An admin can then change the user's role.
+
+LDAP Group sync or custom group mapping could also be possible, but I haven't tried it yet. Send a PR if you want.
+
+For now, use the script `/app/code/setup-ldap.sh` and make necessary changes, then modify the LDAP settings to
+suit your needs using the REST API, even if you have already completed setup.
+
 ## Updating ErpNext
 
-[Official Documentation](https://frappeframework.com/docs/v14/user/en/production-setup#updating)
+This might not work yet because of the read-only
+filesystem. [Official Documentation](https://frappeframework.com/docs/v14/user/en/production-setup#updating)
 
 ```shell
   # update everything

@@ -143,6 +143,6 @@ RUN mkdir -p /app/data/frappe \
     && ln -sf /app/data/frappe/apps /app/code/frappe-bench/apps \
     && ln -sf /app/data/frappe/logs /app/code/frappe-bench/logs
 
-ADD start.sh /app/code/
+ADD start.sh setup-ldap.sh /app/code/
 
 CMD [ "/app/code/start.sh" ]
