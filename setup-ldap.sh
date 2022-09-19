@@ -14,7 +14,7 @@ curl --cookie-jar /tmp/cookiejar --request POST "${CLOUDRON_APP_ORIGIN}/api/meth
 echo ">>>> Adding LDAP Configuration..."
 
 # Modify LDAP Server Settings
-curl --cookie /tmp/cookiejar --request PUT "https://${CLOUDRON_APP_ORIGIN}/api/resource/LDAP%20Settings/LDAP%20Settings" \
+curl --cookie /tmp/cookiejar --request PUT "${CLOUDRON_APP_ORIGIN}/api/resource/LDAP%20Settings/LDAP%20Settings" \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json' \
   --data-raw "{
