@@ -6,7 +6,7 @@ read -r -s -p "Enter admin password:" ADMIN_PASSWORD
 
 echo ">>>> Authenticating..."
 # Authenticate using username / password and store cookies to /tmp/cookiejar
-curl --cookie-jar /tmp/cookiejar --request POST "https://erptest.yarsa.org/api/method/login" \
+curl --cookie-jar /tmp/cookiejar --request POST "${CLOUDRON_APP_ORIGIN}/api/method/login" \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json' \
   --data-raw "{\"usr\" : \"${ADMIN_USER}\", \"pwd\": \"${ADMIN_PASSWORD}\"}"
@@ -14,7 +14,7 @@ curl --cookie-jar /tmp/cookiejar --request POST "https://erptest.yarsa.org/api/m
 echo ">>>> Adding LDAP Configuration..."
 
 # Modify LDAP Server Settings
-curl --cookie /tmp/cookiejar --request PUT "https://erptest.yarsa.org/api/resource/LDAP%20Settings/LDAP%20Settings" \
+curl --cookie /tmp/cookiejar --request PUT "https://${CLOUDRON_APP_ORIGIN}/api/resource/LDAP%20Settings/LDAP%20Settings" \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json' \
   --data-raw "{
@@ -43,18 +43,3 @@ echo ">>>> Removing admin credentials..."
 rm /tmp/cookiejar
 
 echo "LDAP Setup Complete"
-
-## Mark as disabled (required for deletion)
-#curl --cookie /tmp/cookiejar --request PUT "https://erptest.yarsa.org/api/resource/LDAP%20Settings/LDAP%20Settings" \
-#  -H 'Content-Type: application/json' \
-#  -H 'Accept: application/json' \
-#  --data-raw "{
-#  \"docstatus\": 0,
-#  \"idx\": \"0\",
-#  \"enabled\": 0
-#}"
-#
-## Delete
-#curl --cookie /tmp/cookiejar --request DELETE "https://erptest.yarsa.org/api/resource/LDAP%20Settings/LDAP%20Settings" \
-#  -H 'Content-Type: application/json' \
-#  -H 'Accept: application/json'
