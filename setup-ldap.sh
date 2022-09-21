@@ -13,8 +13,10 @@ curl --cookie-jar /tmp/cookiejar --request POST "${CLOUDRON_APP_ORIGIN}/api/meth
 
 echo ">>>> Adding LDAP Configuration..."
 
+
+if [[ $1 == "add" ]]; then
 # Modify LDAP Server Settings
-curl --cookie /tmp/cookiejar --request PUT "${CLOUDRON_APP_ORIGIN}/api/resource/LDAP%20Settings/LDAP%20Settings" \
+  curl --cookie /tmp/cookiejar --request PUT "${CLOUDRON_APP_ORIGIN}/api/resource/LDAP%20Settings/LDAP%20Settings" \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json' \
   --data-raw "{
@@ -34,12 +36,36 @@ curl --cookie /tmp/cookiejar --request PUT "${CLOUDRON_APP_ORIGIN}/api/resource/
   \"ldap_email_field\": \"mail\",
   \"ldap_username_field\": \"username\",
   \"ldap_first_name_field\": \"givenName\",
-  \"default_user_type\": \"Website User\",
-  \"default_role\": \"Guest\"
-}"
+  \"default_user_type\": \"System User\",
+  \"default_role\": \"Employee Self Service\"
+  }"
+  echo "LDAP Setup Complete"
+fi
+
+
+# Mark as disabled (required for deletion)
+if [[ $1 == "disable" ]]; then
+  curl --cookie /tmp/cookiejar --request PUT "${CLOUDRON_APP_ORIGIN}/api/resource/LDAP%20Settings/LDAP%20Settings" \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  --data-raw "{
+  \"docstatus\": 0,
+  \"idx\": \"0\",
+  \"enabled\": 0
+  }"
+  echo "LDAP setting disabled"
+fi
+
+
+# Delete
+if [[ $1 == "delete" ]]; then
+  curl --cookie /tmp/cookiejar --request DELETE "${CLOUDRON_APP_ORIGIN}/api/resource/LDAP%20Settings/LDAP%20Settings" \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json'
+  echo "LDAP setting deleted"
+fi
+
 
 echo ">>>> Removing admin credentials..."
 # Remove the cookiejar
 rm /tmp/cookiejar
-
-echo "LDAP Setup Complete"

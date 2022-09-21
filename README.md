@@ -26,13 +26,16 @@ Please refer to `docker-run.sh` file for some commands handy for you to test thi
 
 ## LDAP Connection [WIP]
 
-LDAP Auth is already configured. When a user logs in for the first time, a new **System User** is created with **Guest**
+LDAP Auth is not already configured. When a user logs in for the first time, a new **System User** is created with **Guest**
 role. An admin can then change the user's role.
 
 LDAP Group sync or custom group mapping could also be possible, but I haven't tried it yet. Send a PR if you want.
 
 For now, use the script `/app/code/setup-ldap.sh` and make necessary changes, then modify the LDAP settings to
-suit your needs using the REST API, even if you have already completed setup.
+suit your needs using the REST API, even if you have already completed setup. It takes one of the three params:
+- add : adds LDAP settings to the site
+- disable: disables LDAP settings (required before deleting)
+- delete: deletes the LDAP settings for the site
 
 ## Updating ErpNext
 
