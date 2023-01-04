@@ -1,5 +1,6 @@
 {
   "manifestVersion": 2,
+  "minBoxVersion": "7.3.3",
   "id": "com.erpnext.cloudronapp",
   "website": "https://www.erpnext.com",
   "contactEmail": "support@erpnext.com",
@@ -12,12 +13,13 @@
   "changelog": "file://manifest/CHANGELOG.md",
   "postInstallMessage": "file://manifest/POSTINSTALL.md",
   "healthCheckPath": "/",
-  "httpPort": 80,
+  "httpPort": 8888,
   "memoryLimit": 4294967296,
+  "multiDomain": true,
   "addons": {
     "localstorage": {},
     "recvmail": {},
-    "sendmail": {},
+    "sendmail": { "supportsDisplayName": true },
     "ldap": {},
     "redis": {
       "noPassword": true

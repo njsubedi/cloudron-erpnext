@@ -23,10 +23,12 @@ BUILDKIT_PROGRESS=plain docker build --platform linux/amd64 -t erpnext_custom . 
     erpnext_custom
 
 BUILDKIT_PROGRESS=plain docker build --platform linux/arm64 -t erpnext14 . &&
-  docker run --platform linux/arm64 --read-only \
+  docker run --platform linux/arm64 \
     -v "$(pwd)"/.docker14/app/data:/app/data:rw \
     -v "$(pwd)"/.docker14/tmp:/tmp:rw \
     -v "$(pwd)"/.docker14/run:/run:rw \
-    -p 8000:80 \
-    -p 9000:9000 \
+    -p 8800:80 \
+    -p 9900:9000 \
+    --network localnet \
+    -e CLOUDRON_REDIS_HOST=redis-stack \
     erpnext14
