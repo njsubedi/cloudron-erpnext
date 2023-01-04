@@ -13,13 +13,15 @@
   "changelog": "file://manifest/CHANGELOG.md",
   "postInstallMessage": "file://manifest/POSTINSTALL.md",
   "healthCheckPath": "/",
+  "configurePath": "/app/",
   "httpPort": 8888,
   "memoryLimit": 4294967296,
   "multiDomain": true,
   "addons": {
     "localstorage": {},
-    "recvmail": {},
-    "sendmail": { "supportsDisplayName": true },
+    "sendmail": {
+      "supportsDisplayName": true
+    },
     "ldap": {},
     "redis": {
       "noPassword": true

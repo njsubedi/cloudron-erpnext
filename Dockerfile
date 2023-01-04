@@ -1,12 +1,5 @@
 FROM cloudron/base:4.0.0@sha256:31b195ed0662bdb06a6e8a5ddbedb6f191ce92e8bee04c03fb02dd4e9d0286df
 
-# Create all necessary directories
-
-RUN mkdir -p /app/code /app/data/{frappe-bench,mariadb} \
-    && chown -R cloudron:cloudron /app/code /app/data
-
-WORKDIR /app/code/frappe-bench
-
 # Remove unnecessary database and php packages (takes some time)
 # install mariadb (10.6 default), python (3.10 default) and required python3 packages
 RUN apt-get remove -y --purge mongodb-* postgresql-* *mysql* *mariadb* \
@@ -21,41 +14,39 @@ RUN apt-get remove -y --purge mongodb-* postgresql-* *mysql* *mariadb* \
     mariadb-server mariadb-backup\
     && pip3 install frappe-bench
 
-ARG FRAPPE_VERSION=v14.21.0
+ENV FRAPPE_VERSION=v14.21.1 ERPNEXT_VERSION=v14.12.0
 
-RUN chown -R 1000:1000 /app/code
+RUN mkdir -p /app/code/frappe-bench /app/pkg && \
+    chown -R 1000:1000 /app/code
+
+WORKDIR /app/code/frappe-bench
 
 # Initialize frappe-bench, whatever it means.
-RUN /usr/local/bin/gosu cloudron:cloudron bench init --verbose \
+RUN gosu cloudron:cloudron bench init --verbose \
     --frappe-branch ${FRAPPE_VERSION} \
     --skip-redis-config-generation \
     --ignore-exist \
     --python /usr/bin/python3 \
     /app/code/frappe-bench
 
-# [1]This is a standard procedure for Cloudron to move existing "data" somewhere else,
-# and put a symlink to /app/data from the original location; on first run, we copy
-# files from <dir>-orig to /app/data/<dir>, which in turn points to the actual files.
-# anyone who has packaged an app would know this practice.
-
 # Move the folders that frappe would pollute with writes at runtime.
-RUN mkdir -p /app/data/frappe \
-    && mv /app/code/frappe-bench/sites /app/code/frappe-bench/sites-orig \
+RUN mkdir -p /app/pkg/frappe-bench-orig \
+    && mv /app/code/frappe-bench/sites /app/pkg/frappe-bench-orig/sites \
     && ln -sf /app/data/frappe/sites /app/code/frappe-bench/sites \
     \
-    && mv /app/code/frappe-bench/env /app/code/frappe-bench/env-orig \
+    && mv /app/code/frappe-bench/env /app/pkg/frappe-bench-orig/env \
     && ln -sf /app/data/frappe/env /app/code/frappe-bench/env \
     \
-    && mv /app/code/frappe-bench/config /app/code/frappe-bench/config-orig \
+    && mv /app/code/frappe-bench/config /app/pkg/frappe-bench-orig/config \
     && ln -sf /app/data/frappe/config /app/code/frappe-bench/config \
     \
-    && mv /app/code/frappe-bench/apps /app/code/frappe-bench/apps-orig \
+    && mv /app/code/frappe-bench/apps /app/pkg/frappe-bench-orig/apps \
     && ln -sf /app/data/frappe/apps /app/code/frappe-bench/apps \
     \
-    && mv /app/code/frappe-bench/logs /app/code/frappe-bench/logs-orig \
+    && mv /app/code/frappe-bench/logs /app/pkg/frappe-bench-orig/logs \
     && ln -sf /run/frappe/logs /app/code/frappe-bench/logs \
     \
-    && mv /app/code/frappe-bench/patches.txt /app/code/frappe-bench/patches-orig.txt \
+    && mv /app/code/frappe-bench/patches.txt /app/pkg/frappe-bench-orig/patches.txt \
     && ln -sf /app/data/frappe/patches.txt /app/code/frappe-bench/patches.txt
 
 
@@ -82,7 +73,7 @@ RUN sudo mysqld_safe & \
 
 COPY supervisor/ /etc/supervisor/
 
-RUN mkdir -p /run/supervisor/{logs} \
+RUN mkdir -p /run/supervisor/logs \
     && sudo ln -s /run/supervisor/logs/supervisord.log /var/log/supervisor/supervisord.log \
     \
     && rm /etc/nginx/sites-enabled/* \
@@ -93,7 +84,5 @@ RUN mkdir -p /run/supervisor/{logs} \
 RUN ln -sf /run/.yarnrc /home/cloudron/.yarnrc
 
 COPY nginx.conf setup-ldap.sh start.sh /app/pkg/
-
-ENV ERPNEXT_VERSION=v14.11.1
 
 CMD [ "/app/pkg/start.sh" ]

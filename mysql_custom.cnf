@@ -10,3 +10,7 @@ character-set-client-handshake=FALSE
 character-set-server=utf8mb4
 collation-server=utf8mb4_unicode_ci
 max_allowed_packet=107374182
+
+# these settings did not work while put in config, so they should be passed as runtime parameters to mysqld_safe
+# --character-set-server
+# --collation-server
